@@ -78,11 +78,11 @@ interface Escalate{
     // fetch all offer
     query func get_offers() -> list<Offer>;
     // bid for a particular offer
-    mutate func bid(offer_id: string, bid_amout: f64) -> result<void, string>;
+    mutate func bid(offer_id: string, bid_amout: f64) -> result<(), string>;
     // resolve one of your created auctions, selling the cards to the winning bidder
-    mutate func resolve(offer_id: string) -> result<void, string>;
+    mutate func resolve(offer_id: string) -> result<(), string>;
     // withdraw your bid from an offer, making the current offer have no current bid
-    mutate func withdraw_bid(offer_id: string) -> result<void, string>;
+    mutate func withdraw_bid(offer_id: string) -> result<(), string>;
 
     // deposit certain amount to the sender's balance
     mutate func deposit(amount: f64) -> result<void, string>
