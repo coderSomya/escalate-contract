@@ -85,5 +85,5 @@ interface Escalate{
     mutate func withdraw_bid(offer_id: string) -> result<(), string>;
 
     // deposit certain amount to the sender's balance
-    mutate func deposit(amount: f64) -> result<void, string>
+    mutate func deposit(amount: f64) -> result<(), string>
 }
