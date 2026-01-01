@@ -1,0 +1,89 @@
+enum Card{
+    ACE,
+    TWO,
+    THREE,
+    FOUR,
+    FIVE,
+    SIX,
+    SEVEN,
+    EIGHT,
+    NINE,
+    TEN,
+    JACK,
+    QUEEN,
+    KING,
+    JOKER
+}
+
+record User{
+    user_id: string,
+    bio: string,
+    balance: f64,
+    cards: list<Card>
+}
+
+record Stake{
+    user_id: string,
+    cards: list<Card>
+}
+
+record Hand{
+    hand_id: string,
+    creator: string,
+    claimed_card: Card,
+    is_resolved: bool,
+    stakes: list<Stake>
+}
+
+record Offer{
+    creator_id: string,
+    cards: list<Card>,
+    initial_price: f64,
+    current_bid: option<f64>,
+    current_bidder_id: option<string>,
+    is_resolved: bool
+}
+
+interface Escalate{
+    // register a new user
+    mutate func register_user(bio: string) -> result<User, string>;
+    // fetch all users
+    // we should show the users details to everyone
+    // except the cards he owns as that might give unfair advantage
+    query func get_users() -> list<User>;
+    // fetch the user with given id
+    query func get_user(id: string) -> option<User>;
+    // returns the cards that the caller owns
+    query func get_my_cards() -> result<list<Card>, string>;
+
+    // initiate a new hand with a given claim, putting a set of Cards
+    // any of which may or may not be the claimed card
+    mutate func start_hand(claim: Card, cards: list<Card>) -> result<Hand, string>;
+    // fetch all hands
+    query func get_hands() -> list<Hand>;
+    // fetch the hand with given id
+    query func get_hand(id: string) -> option<Hand>;
+    
+    // buy some cards 
+    // for 1 amount you get 1 random card which gets added to your list of cards
+    mutate func buy_cards(amount: f64) -> result<list<Card>, string>;
+
+    // caller wants to stake certain cards in the hand
+    mutate func stake(hand_id: string, cards: list<Card>) -> result<Hand, string>;
+    // caller wants to check the hand
+    mutate func check(hand_id: string) -> result<bool, string>;
+
+    // initiate an auction with some of your cards
+    mutate func offer(cards: list<Card>, amount: f64) -> result<Offer, string>;
+    // fetch all offer
+    query func get_offers() -> list<Offer>;
+    // bid for a particular offer
+    mutate func bid(offer_id: string, bid_amout: f64) -> result<void, string>;
+    // resolve one of your created auctions, selling the cards to the winning bidder
+    mutate func resolve(offer_id: string) -> result<void, string>;
+    // withdraw your bid from an offer, making the current offer have no current bid
+    mutate func withdraw_bid(offer_id: string) -> result<void, string>;
+
+    // deposit certain amount to the sender's balance
+    mutate func deposit(amount: f64) -> result<void, string>
+}
