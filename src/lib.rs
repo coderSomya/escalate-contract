@@ -477,22 +477,26 @@ impl Escalate for EscalateContractState {
 
     #[mutate]
     async fn deposit(&mut self, amount: f64) -> Result<(), String> {
-        let sender = Runtime::sender();
-        let mut user = self
-            .users
-            .get(&sender)
-            .unwrap_or_else(|| User::new(sender.clone(), "".to_string()));
+        // TODO: add the ability for users to deposit
+        // some amount
 
-        if amount <= 0.0 {
-            return Err("deposit amount must be positive".to_string());
-        }
+        Err("Deposit is not allowed yet".into())
+        // let sender = Runtime::sender();
+        // let mut user = self
+        //     .users
+        //     .get(&sender)
+        //     .unwrap_or_else(|| User::new(sender.clone(), "".to_string()));
 
-        user.balance += amount;
-        if self.users.get(&sender).is_none() {
-            self.user_ids.push(sender.clone());
-        }
-        self.users.insert(sender, user);
-        Ok(())
+        // if amount <= 0.0 {
+        //     return Err("deposit amount must be positive".to_string());
+        // }
+
+        // user.balance += amount;
+        // if self.users.get(&sender).is_none() {
+        //     self.user_ids.push(sender.clone());
+        // }
+        // self.users.insert(sender, user);
+        // Ok(())
     }
 }
 

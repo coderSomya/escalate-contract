@@ -5,7 +5,7 @@ impl User {
         User {
             user_id,
             bio,
-            balance: 0.0,
+            balance: 100.0,
             cards: Vec::new(),
         }
     }
