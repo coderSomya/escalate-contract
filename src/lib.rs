@@ -1,8 +1,10 @@
 
 use serde::{Deserialize, Serialize};
 use weil_macros::{constructor, mutate, query, smart_contract, WeilType};
+use weil_rs::collections::WeilIdGenerator;
 use weil_rs::collections::{WeilId, map::WeilMap, vec::WeilVec};
 use weil_rs::runtime::Runtime;
+use weil_rs::webserver::WebServer;
 
 mod elements;
 use elements::{Card, Hand, Offer, Stake, User, get_random_cards, is_bluff};
@@ -29,6 +31,25 @@ trait Escalate {
     async fn resolve(&mut self, offer_id: String) -> Result<(), String>;
     async fn withdraw_bid(&mut self, offer_id: String) -> Result<(), String>;
     async fn deposit(&mut self, amount: f64) -> Result<(), String>;
+
+    // webserver specific functions
+    fn start_file_upload(&mut self, path: String, total_chunks: u32) -> Result<(), String>;
+    fn add_path_content(
+        &mut self,
+        path: String,
+        chunk: Vec<u8>,
+        index: u32,
+    ) -> Result<(), String>;
+    fn finish_upload(&mut self, path: String, size_bytes: u32) -> Result<(), String>;
+    fn total_chunks(&self, path: String) -> Result<u32, String>;
+    fn http_content(
+        &self,
+        path: String,
+        index: u32,
+        method: String,
+    ) -> (u16, std::collections::HashMap<String, String>, Vec<u8>);
+    fn size_bytes(&self, path: String) -> Result<u32, String>;
+    fn get_chunk_size(&self) -> u32;
 }
 
 const EQUIVALENT_REWARD: f64 = 1.0;
@@ -110,6 +131,8 @@ pub struct EscalateContractState {
     offer_ids: WeilVec<String>,
     hand_counter: u64,
     offer_counter: u64,
+    server: WebServer,
+    weil_id_generator: WeilIdGenerator
 }
 
 #[smart_contract]
@@ -129,6 +152,8 @@ impl Escalate for EscalateContractState {
                 offer_ids: WeilVec::new(WeilId(6)),
                 hand_counter: 0,
                 offer_counter: 0,
+                server: WebServer::new(WeilId(7), None),
+                weil_id_generator: WeilIdGenerator::new(WeilId(8))
             }
         )
     }
@@ -497,6 +522,51 @@ impl Escalate for EscalateContractState {
         // }
         // self.users.insert(sender, user);
         // Ok(())
+    }
+
+    #[mutate]
+    fn start_file_upload(&mut self, path: String, total_chunks: u32) -> Result<(), String> {
+        self.server.start_file_upload(self.weil_id_generator.next_id(), path, total_chunks)
+    }
+
+    #[query]
+    fn total_chunks(&self, path: String) -> Result<u32, String> {
+        self.server.total_chunks(path)
+    }
+
+    #[mutate]
+    fn add_path_content(
+        &mut self,
+        path: String,
+        chunk: Vec<u8>,
+        index: u32,
+    ) -> Result<(), String> {
+        self.server.add_path_content(path, chunk, index)
+    }
+
+    #[mutate]
+    fn finish_upload(&mut self, path: String, size_bytes: u32) -> Result<(), String> {
+        self.server.finish_upload(path, size_bytes)
+    }
+
+    #[query]
+    fn http_content(
+        &self,
+        path: String,
+        index: u32,
+        method: String,
+    ) -> (u16, std::collections::HashMap<String, String>, Vec<u8>) {
+        self.server.http_content(path, index, method)
+    }
+
+    #[query]
+    fn size_bytes(&self, path: String) -> Result<u32, String> {
+        self.server.size_bytes(path)
+    }
+
+    #[query]
+    fn get_chunk_size(&self) -> u32 {
+        self.server.get_chunk_size()
     }
 }
 
